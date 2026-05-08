@@ -19,6 +19,7 @@
  */
 
 #include "common.h"
+#include "volatile_mem.h"
 
 
 
@@ -3811,7 +3812,10 @@ void save_state(char *savestate_filename, u16 *screen_capture)
     free_overlay_memory();
   }
 
-  savestate_write_buffer = (u8 *)safe_malloc(SAVESTATE_SIZE);
+  /* 512 KiB scratch for the savestate write pass — short-lived but
+   * routed through volatile RAM to avoid a large transient main-heap
+   * spike. */
+  savestate_write_buffer = (u8 *)safe_malloc_volatile(SAVESTATE_SIZE);
   if (savestate_write_buffer == NULL) {
     // Restore overlay if allocation failed
     if (need_restore_overlay) {
@@ -3846,7 +3850,7 @@ void save_state(char *savestate_filename, u16 *screen_capture)
 
   scePowerUnlock(0);
 
-  free(savestate_write_buffer);
+  volatile_mem_free(savestate_write_buffer);
   
   // Restore overlay if we freed it earlier
   if (need_restore_overlay) {

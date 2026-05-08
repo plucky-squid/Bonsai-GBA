@@ -762,6 +762,16 @@ static void setup_main(void)
 {
   scePowerLock(0);
 
+  /*
+   * Unlock the 4 MB volatile RAM partition before any heap allocations
+   * happen. safe_malloc_volatile() and any caller that uses it (color
+   * LUTs, overlay buffers, savestate scratch) will route into this
+   * partition first and keep the main heap free for ROM caching, JIT
+   * codegen, and dynarec metadata. If unlock fails (e.g. PPSSPP), every
+   * caller falls back to the regular heap transparently.
+   */
+  volatile_mem_init();
+
   initExceptionHandler();
 
   int devkit_version = sceKernelDevkitVersion();
@@ -946,6 +956,11 @@ void quit(void)
   memory_term();
   cpu_term();
   video_term();
+
+  /* Release the volatile RAM lock so suspend/resume works for whatever
+   * runs after us (the kernel reclaims the partition on process exit
+   * anyway, but releasing the power lock cleanly is the correct thing). */
+  volatile_mem_shutdown();
 
   set_cpu_clock(PSP_CLOCK_222);
 
@@ -1208,6 +1223,31 @@ void *safe_malloc(size_t size)
   }
 
   return p;
+}
+
+/*
+ * Volatile-RAM-preferred allocator.
+ *
+ * The PSP exposes an extra 4 MB partition (partition 5, "VolatileMem")
+ * that we unlock at boot via volatile_mem_init(). Large, long-lived
+ * buffers that the emulator allocates once and keeps for the entire
+ * session (savestate scratch, color-correction LUTs, overlay framebuffer
+ * + RLE cache) are excellent candidates for it: putting them there means
+ * the main heap stays free for game code, dynarec metadata, and the
+ * gamepak ROM cache.
+ *
+ * If volatile RAM is unavailable (init failed, e.g. PPSSPP) or the
+ * partition is exhausted, volatile_mem_alloc falls back to malloc(3),
+ * and we then fall back further to safe_malloc which abort-on-OOMs.
+ */
+void *safe_malloc_volatile(size_t size)
+{
+  void *p = volatile_mem_alloc(size);
+
+  if (p != NULL)
+    return p;
+
+  return safe_malloc(size);
 }
 
 

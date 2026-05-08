@@ -63,8 +63,16 @@ u32 ALIGN_DATA spsr[7];
 
 
 // Optimized cache sizes - balanced for performance and stability
-#define READONLY_CODE_CACHE_SIZE          (1024 * 1024 * 2)  // 2MB for ROM/BIOS (balanced size)
-#define WRITABLE_CODE_CACHE_SIZE          (1024 * 256 * 1)   // 256KB for RAM (increased for stability)
+#define READONLY_CODE_CACHE_SIZE          (1024 * 1024 * 2)  /* 2 MB for ROM/BIOS translations */
+/*
+ * Writable cache holds JIT output for EWRAM/IWRAM/VRAM. Pokémon Unbound
+ * (and any large ROM hack with a custom engine) generates enough RAM
+ * code to thrash a 256 KB cache, forcing repeated full flushes. With
+ * the bios_translation_cache (-2 MB) and gba_cc_lut (-256 KB) reclaimed
+ * in the previous tier, growing this to 1 MB still leaves us net ahead
+ * on BSS and substantially cuts retranslation churn.
+ */
+#define WRITABLE_CODE_CACHE_SIZE          (1024 * 1024 * 1)  /* 1 MB writable JIT cache */
 
 // Enable cache invalidation reduction to fix micro stutters
 #define PSP_REDUCE_CACHE_INVALIDATION

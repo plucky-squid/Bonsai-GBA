@@ -1,13 +1,15 @@
-FrogGBA - Modified TempGBA4PSP for Enhanced PSP Gameplay
-==========================================================
+Bonsai GBA - A Lean, Optimized GBA Emulator for PSP
+====================================================
 
-Copyright (C) 2024 FrogGBA Project Contributors
-Based on TempGBA4PSP and gameplaySP kai
+Copyright (C) 2026 Bonsai GBA Project Contributors
+Forked from FrogGBA, which is itself based on TempGBA4PSP and gameplaySP kai.
 
 This software is a derivative work based on:
 - gameplaySP kai by Exophase (2006) and takka (2007)
+- TempGBA by Nebuleon, Normmatt, and BassAceGold
 - TempGBA4PSP modifications by various contributors
-- Additional enhancements and overlay system by FrogGBA Project (2024)
+- FrogGBA modifications and overlay system by the FrogGBA Project (2024)
+- Bonsai GBA optimizations and modifications by the Bonsai GBA Project (2026)
 
 LICENSE
 -------
@@ -33,23 +35,28 @@ gameplaySP kai:
 Copyright (C) 2006 Exophase <exophase@gmail.com>
 Copyright (C) 2007 takka <takka@tfact.net>
 
+FrogGBA:
+Copyright (C) 2024 FrogGBA Project Contributors
+
 ADDITIONAL COMPONENTS
---------------------
+---------------------
 
-The overlay system, PNG to OVL converter tools, and performance optimizations
-are additional contributions by the FrogGBA Project and are licensed under
-the same GPL v2+ terms as the original software.
+The overlay system, PNG to OVL converter tools, performance optimizations,
+and any further modifications introduced under the Bonsai GBA Project are
+licensed under the same GPL v2+ terms as the original software.
 
-Web-based tools (HTML/JavaScript files in tools/ directory) may be used,
+Web-based tools (HTML/JavaScript files in the tools/ directory) may be used,
 modified, and distributed under the same GPL v2+ license terms.
 
 ACKNOWLEDGMENTS
---------------
+---------------
 
 Special thanks to:
 - Exophase for the original gameplaySP emulator
 - takka for gameplaySP kai improvements
+- Nebuleon, Normmatt, and BassAceGold for TempGBA
 - The TempGBA4PSP community for PSP-specific enhancements
+- The FrogGBA Project for the modernised emulator and overlay system
 - All contributors who have helped improve this emulator
 
 For the full text of the GPL v2 license, see:

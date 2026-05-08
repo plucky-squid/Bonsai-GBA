@@ -1,8 +1,8 @@
-/* FrogGBA PSP Volatile Memory Support
+/* Bonsai GBA PSP volatile memory support
  *
- * This provides access to an additional 4MB of RAM on PSP
- * through the volatile memory partition (partition 5).
- * Based on implementation from DaedalusX64.
+ * Exposes the extra 4 MB of RAM in the PSP volatile memory partition
+ * (partition 5). Based on the implementation from DaedalusX64; brought
+ * across from FrogGBA into Bonsai GBA.
  */
 
 #ifndef VOLATILE_MEM_H

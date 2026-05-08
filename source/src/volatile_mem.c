@@ -1,5 +1,5 @@
-/* FrogGBA PSP Volatile Memory Support Implementation 
- * Based on DaedalusX64 implementation */
+/* Bonsai GBA PSP volatile memory support — implementation
+ * Based on DaedalusX64; brought across from FrogGBA. */
 
 #include "volatile_mem.h"
 #include <stdlib.h>

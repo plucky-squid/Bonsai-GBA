@@ -1,0 +1,91 @@
+name: Build
+
+# Run on every push (any branch, any tag), on every pull request, and
+# allow manual dispatch from the Actions tab.
+on:
+  push:
+    branches: ['**']
+    tags: ['**']
+  pull_request:
+  workflow_dispatch:
+
+# Locked-down default permissions. The build doesn't need write access
+# to anything; if a future job needs more (e.g. release upload) it can
+# opt in at the job level.
+permissions:
+  contents: read
+
+# Cancel superseded runs on the same ref to avoid burning CI minutes on
+# stale commits. Pushes to default branches still complete fully.
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  psp:
+    name: PSP build (pspdev toolchain)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # Build inside the same image used by docker-compose locally, so CI
+    # parity is exact: if it builds here it should build on a developer
+    # machine and vice versa.
+    container:
+      image: pspdev/pspdev:latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Toolchain info
+        shell: bash
+        run: |
+          echo "::group::psp-gcc"
+          psp-gcc --version | head -n 3
+          echo "::endgroup::"
+          echo "::group::psp-config"
+          psp-config --pspsdk-path || true
+          psp-config --psp-prefix  || true
+          echo "::endgroup::"
+          echo "PSPDEV=${PSPDEV:-unset}"
+          echo "PSPSDK=${PSPSDK:-unset}"
+
+      - name: Build
+        shell: bash
+        working-directory: source
+        run: |
+          make clean || true
+          make -j"$(nproc)"
+
+      - name: Verify outputs
+        shell: bash
+        working-directory: source
+        run: |
+          ls -lh EBOOT.PBP BonsaiGBA.prx
+          [ -s EBOOT.PBP    ] || { echo "::error::EBOOT.PBP is missing or empty";    exit 1; }
+          [ -s BonsaiGBA.prx ] || { echo "::error::BonsaiGBA.prx is missing or empty"; exit 1; }
+
+      - name: Build summary
+        if: always()
+        shell: bash
+        working-directory: source
+        run: |
+          {
+            echo "### Build artifacts"
+            echo
+            echo "| File | Size |"
+            echo "|------|------|"
+            for f in EBOOT.PBP BonsaiGBA.prx; do
+              [ -e "$f" ] && printf "| \`%s\` | %s |\n" "$f" "$(du -h "$f" | cut -f1)"
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bonsai-gba-${{ github.sha }}
+          path: |
+            source/EBOOT.PBP
+            source/BonsaiGBA.prx
+          if-no-files-found: error
+          retention-days: 30

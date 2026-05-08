@@ -19,6 +19,7 @@
  */
 
 #include "common.h"
+#include "volatile_mem.h"
 #include "volume_icon.c"
 
 // Optimized color correction lookup tables (dynamically allocated)
@@ -3502,11 +3503,15 @@ void init_color_correction_luts(void)
     return;
     
   // Allocate lookup tables dynamically to save static memory
+  /* The two color-correction LUTs are 64 KiB each, written exactly once
+   * at boot and read on every scanline. Volatile RAM is the right home
+   * for them: it keeps 128 KiB out of the main heap and they're cold
+   * data that doesn't compete with the JIT for the L1 D-cache. */
   if (!gpsp_color_lut) {
-    gpsp_color_lut = (u16*)safe_malloc(32768 * sizeof(u16));
+    gpsp_color_lut = (u16*)safe_malloc_volatile(32768 * sizeof(u16));
   }
   if (!retro_color_lut) {
-    retro_color_lut = (u16*)safe_malloc(32768 * sizeof(u16));
+    retro_color_lut = (u16*)safe_malloc_volatile(32768 * sizeof(u16));
   }
 
   // Build GPSP color correction LUT
@@ -3704,7 +3709,20 @@ static void generate_display_list(float mag)
 
 static void bitbilt_gu(void)
 {
-  sceKernelDcacheWritebackAll();
+  /*
+   * The GPU is about to sample screen_texture (cached VRAM at
+   * 0x04000000+); the renderer has been writing pixels to it via
+   * cached stores. Only those dirty lines actually need to reach
+   * physical VRAM before sceGuCallList runs.
+   *
+   * Doing a range writeback over the texture footprint instead of a
+   * whole-D-cache writeback (sceKernelDcacheWritebackAll) leaves
+   * unrelated dirty lines — JIT codegen, audio buffer, dynarec
+   * metadata, GUI scratch — undisturbed, which is the entire point on
+   * a 16 KiB D-cache shared with everything else on the main thread.
+   */
+  sceKernelDcacheWritebackInvalidateRange(
+    screen_texture, GBA_LINE_SIZE * GBA_SCREEN_HEIGHT * 2);
 
   sceGuStart(GU_DIRECT, display_list);
 
@@ -3712,7 +3730,7 @@ static void bitbilt_gu(void)
 
   sceGuFinish();
   sceGuSync(0, GU_SYNC_FINISH);
-  
+
   // Apply overlay AFTER GPU finishes to avoid conflicts
   render_overlay();
 }
@@ -3783,7 +3801,10 @@ static void bitbilt_sw(void)
   u16 *vptr, *vptr0;
   u16 *d, *d0;
 
-  sceKernelDcacheWritebackAll();
+  /* Same rationale as bitbilt_gu: only screen_texture needs to be
+   * coherent before we start drawing. */
+  sceKernelDcacheWritebackInvalidateRange(
+    screen_texture, GBA_LINE_SIZE * GBA_SCREEN_HEIGHT * 2);
 
   sceGuStart(GU_DIRECT, display_list);
 
@@ -4562,9 +4583,11 @@ void load_overlay(const char *filename)
   // Build full path to overlay file
   sprintf(filepath, "%s%s.ovl", dir_overlay, filename);
 
-  // Allocate overlay buffer if not already allocated
+  /* Overlay framebuffer is 480 * 272 * 2 = ~261 KiB, lives for the
+   * whole emulator session, and is read by the GPU every frame the
+   * overlay is enabled. Park it in volatile RAM. */
   if (overlay_buffer == NULL) {
-    overlay_buffer = (u16*)safe_malloc(OVERLAY_SIZE * sizeof(u16));
+    overlay_buffer = (u16*)safe_malloc_volatile(OVERLAY_SIZE * sizeof(u16));
     if (overlay_buffer == NULL) {
       return;
     }
@@ -4608,11 +4631,11 @@ void clear_overlay(void)
 void free_overlay_memory(void) 
 {
   if (overlay_buffer != NULL) {
-    free(overlay_buffer);
+    volatile_mem_free(overlay_buffer);
     overlay_buffer = NULL;
   }
   if (overlay_rle_cache != NULL) {
-    free(overlay_rle_cache);
+    volatile_mem_free(overlay_rle_cache);
     overlay_rle_cache = NULL;
   }
   overlay_loaded = 0;
@@ -4719,13 +4742,14 @@ void build_overlay_cache(void) {
   
   // Free old cache if it exists
   if (overlay_rle_cache != NULL) {
-    free(overlay_rle_cache);
+    volatile_mem_free(overlay_rle_cache);
     overlay_rle_cache = NULL;
   }
-  
-  // Allocate RLE cache dynamically (estimate max entries as pixels/2 for safety)
+
+  /* RLE cache scales with overlay opacity; can be 100s of KiB for fully
+   * opaque borders. Volatile RAM keeps it out of the main heap. */
   max_rle_entries = (pixels_to_render > MAX_CACHE_ENTRIES) ? MAX_CACHE_ENTRIES : pixels_to_render;
-  overlay_rle_cache = (overlay_rle_entry*)safe_malloc(max_rle_entries * sizeof(overlay_rle_entry));
+  overlay_rle_cache = (overlay_rle_entry*)safe_malloc_volatile(max_rle_entries * sizeof(overlay_rle_entry));
   
   if (overlay_rle_cache == NULL) {
     return;
@@ -4796,7 +4820,7 @@ void build_overlay_cache(void) {
   
   // Free the original overlay buffer to save memory (we only need the RLE cache now)
   if (overlay_buffer != NULL) {
-    free(overlay_buffer);
+    volatile_mem_free(overlay_buffer);
     overlay_buffer = NULL;
   }
   

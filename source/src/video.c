@@ -19,7 +19,6 @@
  */
 
 #include "common.h"
-#include "gba_cc_lut.h"
 #include "volume_icon.c"
 
 // Optimized color correction lookup tables (dynamically allocated)
@@ -3509,9 +3508,7 @@ void init_color_correction_luts(void)
   if (!retro_color_lut) {
     retro_color_lut = (u16*)safe_malloc(32768 * sizeof(u16));
   }
-    
-  printf("Initializing color correction lookup tables...\n");
-  
+
   // Build GPSP color correction LUT
   for (int rgb555 = 0; rgb555 < 32768; rgb555++)
   {
@@ -3563,7 +3560,6 @@ void init_color_correction_luts(void)
   }
   
   color_luts_initialized = 1;
-  printf("Color correction LUTs initialized (128KB)\n");
 }
 
 void init_video(int devkit_version)
@@ -3643,16 +3639,7 @@ static void generate_display_list(float mag)
   // Apply user-specified X/Y offset for overlay positioning
   extern u32 option_overlay_offset_x;
   extern u32 option_overlay_offset_y;
-  
-  /*
-  FILE *debug_log = fopen("froggba_debug.log", "a");
-  if (debug_log) {
-    fprintf(debug_log, "generate_display_list: READING offset vars: option_overlay_offset_x=%d, option_overlay_offset_y=%d\n", 
-            option_overlay_offset_x, option_overlay_offset_y);
-    fclose(debug_log);
-  }
-  */
-  
+
   // Calculate position: default center + user offset (allowing negative movement)
   u32 default_dx = (PSP_SCREEN_WIDTH  - dw) >> 1;
   u32 default_dy = (PSP_SCREEN_HEIGHT - dh) >> 1;
@@ -3668,15 +3655,6 @@ static void generate_display_list(float mag)
   // Clamp to screen bounds to prevent crashes
   dx = (new_dx < 0) ? 0 : (new_dx > PSP_SCREEN_WIDTH - dw) ? PSP_SCREEN_WIDTH - dw : new_dx;
   dy = (new_dy < 0) ? 0 : (new_dy > PSP_SCREEN_HEIGHT - dh) ? PSP_SCREEN_HEIGHT - dh : new_dy;
-  
-  /*
-  debug_log = fopen("froggba_debug.log", "a");
-  if (debug_log) {
-    fprintf(debug_log, "generate_display_list: mag=%.2f, dw=%d, dh=%d, default_dx=%d, default_dy=%d, offset_x=%d, offset_y=%d, final_dx=%d, final_dy=%d\n", 
-            mag, dw, dh, default_dx, default_dy, option_overlay_offset_x, option_overlay_offset_y, dx, dy);
-    fclose(debug_log);
-  }
-  */
 
   sceGuStart(GU_CALL, display_list_0);
 
@@ -3752,14 +3730,6 @@ static void generate_display_list_stretch(void)
   // No offset for stretch mode - always use full screen
   dx = 0;
   dy = 0;
-  
-  /*
-  FILE *debug_log = fopen("froggba_debug.log", "a");
-  if (debug_log) {
-    fprintf(debug_log, "generate_display_list_stretch: stretching to full PSP screen dw=%d, dh=%d\n", dw, dh);
-    fclose(debug_log);
-  }
-  */
 
   sceGuStart(GU_CALL, display_list_0);
 
@@ -3881,14 +3851,7 @@ void video_resolution_small(void)
 void set_gba_resolution(void)
 {
   extern u32 option_aspect_ratio;
-  
-  /*FILE *debug_log = fopen("froggba_debug.log", "a");
-  if (debug_log) {
-    fprintf(debug_log, "set_gba_resolution: option_screen_scale=%d, aspect_ratio=%d\n", 
-            option_screen_scale, option_aspect_ratio);
-    fclose(debug_log);
-  }*/
-  
+
   // Handle aspect ratio modes
   if (option_aspect_ratio == 1) {
     // Zoom mode: fill entire screen (480x272) - crops top/bottom
@@ -4588,83 +4551,43 @@ void load_overlay(const char *filename)
 {
   SceUID fd;
   char filepath[MAX_PATH];
-  
-  
+
   // Clear overlay first
   clear_overlay();
-  
-  /*debug_log = fopen("froggba_debug.log", "a");
-  if (debug_log) {
-    fprintf(debug_log, "load_overlay: filename='%s'\n", filename ? filename : "NULL");
-    fclose(debug_log);
-  }*/
-  
+
   if (!filename || strcmp(filename, "None") == 0) {
     return;
   }
-  
+
   // Build full path to overlay file
   sprintf(filepath, "%s%s.ovl", dir_overlay, filename);
-  
-  /*debug_log = fopen("froggba_debug.log", "a");
-  if (debug_log) {
-    fprintf(debug_log, "load_overlay: trying path='%s'\n", filepath);
-    fclose(debug_log);
-  }*/
-  
+
   // Allocate overlay buffer if not already allocated
   if (overlay_buffer == NULL) {
     overlay_buffer = (u16*)safe_malloc(OVERLAY_SIZE * sizeof(u16));
     if (overlay_buffer == NULL) {
-      /*debug_log = fopen("froggba_debug.log", "a");
-      if (debug_log) {
-        fprintf(debug_log, "load_overlay: Failed to allocate overlay buffer\n");
-        fclose(debug_log);
-      }*/
       return;
     }
   }
-  
-  // Don't allocate cache arrays here - will be done dynamically after counting pixels
 
   // Try to open overlay file (using .ovl extension for raw overlay data)
   fd = sceIoOpen(filepath, PSP_O_RDONLY, 0777);
   if (fd >= 0) {
     // Read overlay data (480x272 pixels, 2 bytes per pixel = 261,120 bytes)
-    int bytes_read = sceIoRead(fd, overlay_buffer, OVERLAY_SIZE * 2);
+    sceIoRead(fd, overlay_buffer, OVERLAY_SIZE * 2);
     sceIoClose(fd);
-    
+
     overlay_loaded = 1;
     overlay_first_render = 1; // Reset first render flag for new overlay
     overlay_needs_update = 1; // Mark that overlay needs to be rendered
-    
-    /*debug_log = fopen("froggba_debug.log", "a");
-    if (debug_log) {
-      fprintf(debug_log, "load_overlay: Set overlay_loaded=1, overlay_needs_update=1, overlay_first_render=1\n");
-      fclose(debug_log);
-    }*/
-    
-    
+
     // Build ultra-fast overlay cache
     build_overlay_cache();
-    
-    /*debug_log = fopen("froggba_debug.log", "a");
-    if (debug_log) {
-      fprintf(debug_log, "load_overlay: SUCCESS! Read %d bytes, overlay_loaded=%d, opaque=%d\n", 
-              bytes_read, overlay_loaded, total_opaque_pixels_in_cache);
-      fclose(debug_log);
-    }*/
   } else {
     // Try PNG format (would need proper PNG loading implementation)
     sprintf(filepath, "%s%s.png", dir_overlay, filename);
     // For now, PNG loading is not implemented
     overlay_loaded = 0;
-    
-    /*debug_log = fopen("froggba_debug.log", "a");
-    if (debug_log) {
-      fprintf(debug_log, "load_overlay: FAILED to open file\n");
-      fclose(debug_log);
-    }*/
   }
 }
 

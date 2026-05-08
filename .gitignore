@@ -1,42 +1,218 @@
-# Build artifacts
+# =============================================================================
+# Bonsai GBA — .gitignore
+# =============================================================================
+#
+# IMPORTANT: We deliberately track vendored PSP SDK static libraries under
+# source/SDK/lib/ and source/src/libpower/. The blanket "*.a" rule below
+# would normally ignore those, so they are explicitly re-included via "!"
+# negations at the bottom of this file. Do not "fix" that.
+#
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+# C / C++ build artifacts
+# -----------------------------------------------------------------------------
 *.o
+*.obj
+*.lo
+*.slo
+*.ko
+*.a
+*.la
+*.lai
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.out
+*.app
+*.gch
+*.pch
+
+# Linker output / debug info
 *.elf
+*.map
+*.lst
+*.sym
+*.dump
+*.dSYM/
+
+# Dependency files
+*.d
+*.dep
+*.depend
+
+# Code coverage
+*.gcda
+*.gcno
+*.gcov
+coverage.info
+coverage/
+
+# Profiling
+*.prof
+gmon.out
+perf.data*
+
+# ccache / sccache
+.ccache/
+.sccache/
+
+
+# -----------------------------------------------------------------------------
+# PSP-specific build outputs
+# -----------------------------------------------------------------------------
 *.prx
 *.PBP
+*.SFO
 EBOOT.PBP
 PARAM.SFO
 TempGBA.*
 FrogGBA.*
+BonsaiGBA.*
 
-# Build directory artifacts
+# Toolchain checkouts produced under build/ by the Docker build pipeline
+build/pspsdk/
+build/psptoolchain/
+
+# Emitted artifacts under build/
 build/EBOOT.PBP
-build/FrogGBA.prx
+build/*.prx
+build/*.elf
 build/*.o
+build/*.PBP
+build/*.SFO
 
-# Compilation logs
+# Build / compile logs
 compile.txt
+compile_commands.json
 buildlog.txt
+*.log
 
-# Screenshots/test images
-*.jpg
-*.png
-!res/*.png
 
-# Temporary files
-*.tmp
-*.bak
+# -----------------------------------------------------------------------------
+# Release archives (the directory structure is tracked, archives are not)
+# -----------------------------------------------------------------------------
+release/*.zip
+release/*.tar.gz
+release/*.tar.bz2
+release/*.tar.xz
+release/*.7z
+release/*.PBP
 
-# IDE/Editor files
+
+# -----------------------------------------------------------------------------
+# Editor & IDE
+# -----------------------------------------------------------------------------
+# VSCode / Cursor
 .vscode/
+.cursor/
+.history/
+
+# JetBrains (CLion, IntelliJ, AppCode, etc.)
+.idea/
+*.iml
+cmake-build-*/
+
+# Xcode
+*.xcodeproj/
+*.xcworkspace/
+xcuserdata/
+*.xcuserstate
+DerivedData/
+
+# Visual Studio
+.vs/
+*.vcxproj.user
+*.suo
+*.user
+*.opensdf
+*.sdf
+*.opendb
+*.VC.db
+*.VC.opendb
+
+# Eclipse
+.cproject
+.project
+.settings/
+
+# vim / emacs
 *.swp
 *.swo
+*.swn
 *~
+*.bak
+\#*\#
+.\#*
 
-# OS generated files
+# ctags / cscope
+tags
+TAGS
+.tags
+.cscope.*
+cscope.*
+
+# Sublime
+*.sublime-workspace
+*.sublime-project
+
+
+# -----------------------------------------------------------------------------
+# OS-generated files
+# -----------------------------------------------------------------------------
+# macOS
 .DS_Store
 .DS_Store?
 ._*
+.AppleDouble
+.LSOverride
 .Spotlight-V100
 .Trashes
-ehthumbs.db
+.TemporaryItems
+.fseventsd
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
 Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# Linux
+.directory
+.Trash-*
+.nfs*
+
+
+# -----------------------------------------------------------------------------
+# Misc
+# -----------------------------------------------------------------------------
+*.tmp
+*.temp
+*.cache
+node_modules/
+.env
+.env.local
+
+# Loose screenshots/test images at repo root only — keep res/ assets
+/*.jpg
+/*.jpeg
+/*.png
+/*.gif
+
+
+# =============================================================================
+# EXCEPTIONS — vendored libraries and shipped assets that MUST stay tracked
+# =============================================================================
+!source/SDK/lib/*.a
+!source/src/libpower/*.a
+!source/res/**
+!bezel.ovl
+!overlay.ovl

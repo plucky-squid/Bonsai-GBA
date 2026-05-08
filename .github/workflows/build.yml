@@ -61,19 +61,9 @@ jobs:
         shell: bash
         working-directory: source
         run: |
-          ls -lh EBOOT.PBP ./*.prx
-          [ -s EBOOT.PBP ] || { echo "::error::EBOOT.PBP is missing or empty"; exit 1; }
-          # The Makefile target is currently FrogGBA.* until renamed to
-          # BonsaiGBA.*; accept either so this CI keeps working through
-          # that rename without a flag day.
-          shopt -s nullglob
-          prx_files=( ./*.prx )
-          if [ ${#prx_files[@]} -eq 0 ]; then
-            echo "::error::No .prx file produced"; exit 1
-          fi
-          for f in "${prx_files[@]}"; do
-            [ -s "$f" ] || { echo "::error::$f is empty"; exit 1; }
-          done
+          ls -lh EBOOT.PBP BonsaiGBA.prx
+          [ -s EBOOT.PBP    ] || { echo "::error::EBOOT.PBP is missing or empty";    exit 1; }
+          [ -s BonsaiGBA.prx ] || { echo "::error::BonsaiGBA.prx is missing or empty"; exit 1; }
 
       - name: Build summary
         if: always()
@@ -85,8 +75,8 @@ jobs:
             echo
             echo "| File | Size |"
             echo "|------|------|"
-            for f in EBOOT.PBP ./*.prx; do
-              [ -e "$f" ] && printf "| \`%s\` | %s |\n" "$(basename "$f")" "$(du -h "$f" | cut -f1)"
+            for f in EBOOT.PBP BonsaiGBA.prx; do
+              [ -e "$f" ] && printf "| \`%s\` | %s |\n" "$f" "$(du -h "$f" | cut -f1)"
             done
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -96,6 +86,6 @@ jobs:
           name: bonsai-gba-${{ github.sha }}
           path: |
             source/EBOOT.PBP
-            source/*.prx
+            source/BonsaiGBA.prx
           if-no-files-found: error
           retention-days: 30

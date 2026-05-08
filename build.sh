@@ -1,19 +1,21 @@
 #!/bin/bash
+#
+# Bonsai GBA build script
+#
+# Compiles the Bonsai GBA emulator for PSP using the pspdev toolchain.
+# Intended to run inside the pspdev/pspdev Docker image (see Dockerfile
+# and docker-compose.yml). Outputs are copied to the top-level build/
+# directory so they survive after the container exits.
 
-# FrogGBA Build Script
-# This script compiles the FrogGBA emulator for PSP
+set -e
 
-set -e  # Exit on any error
-
-echo "=== FrogGBA Build Script ==="
+echo "=== Bonsai GBA build script ==="
 echo "Setting up PSP development environment..."
 
-# Set PSP development environment variables
 export PSPDEV=/usr/local/pspdev
 export PATH=$PATH:$PSPDEV/bin
 export PSPSDK=$PSPDEV/psp/sdk
 
-# Verify toolchain is installed
 echo "Checking PSP toolchain..."
 if ! command -v psp-gcc &> /dev/null; then
     echo "ERROR: PSP toolchain not found. Make sure the Docker image was built correctly."
@@ -26,29 +28,26 @@ psp-gcc --version | head -1
 echo "PSP SDK path: $PSPSDK"
 echo "PSP DEV path: $PSPDEV"
 
-# Navigate to source directory
 cd source
 
-echo "=== Building FrogGBA ==="
+echo "=== Building Bonsai GBA ==="
 echo "Cleaning previous build..."
 make clean || true
 
 echo "Starting compilation..."
-make
+make -j"$(nproc 2>/dev/null || echo 2)"
 
-# Check if build was successful
-if [ -f "FrogGBA.prx" ] && [ -f "EBOOT.PBP" ]; then
+if [ -f "BonsaiGBA.prx" ] && [ -f "EBOOT.PBP" ]; then
     echo "=== BUILD SUCCESSFUL ==="
     echo "Generated files:"
-    ls -la FrogGBA.prx EBOOT.PBP
-    
-    # Create output directory
+    ls -la BonsaiGBA.prx EBOOT.PBP
+
     mkdir -p ../build
-    cp FrogGBA.prx ../build/
+    cp BonsaiGBA.prx ../build/
     cp EBOOT.PBP ../build/
-    
+
     echo "Build artifacts copied to build/ directory"
-    echo "You can now copy EBOOT.PBP to your PSP's PSP/GAME/FrogGBA/ folder"
+    echo "You can now copy EBOOT.PBP to your PSP's PSP/GAME/BonsaiGBA/ folder"
 else
     echo "=== BUILD FAILED ==="
     echo "Expected output files not found"

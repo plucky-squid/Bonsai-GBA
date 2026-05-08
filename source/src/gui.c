@@ -321,28 +321,11 @@ void init_overlays_at_boot(void)
   SceUID dir;
   SceIoDirent dirent;
   char *ext;
-  
-  /*FILE *debug_log = fopen("froggba_debug.log", "a");
-  if (debug_log) {
-    fprintf(debug_log, "DEBUG: init_overlays_at_boot() called\n");
-    fprintf(debug_log, "DEBUG: dir_overlay = '%s'\n", dir_overlay);
-    fflush(debug_log);
-    fclose(debug_log);
-  }*/
-  
-  // Start with just "None"
+
   num_overlays = 1;
-  
-  // Try to open the overlays directory
+
   dir = sceIoDopen(dir_overlay);
-  
-  /*debug_log = fopen("froggba_debug.log", "a");
-  if (debug_log) {
-    fprintf(debug_log, "DEBUG: sceIoDopen returned %d\n", dir);
-    fflush(debug_log);
-    fclose(debug_log);
-  }*/
-  
+
   if (dir >= 0)
   {
     // Scan for PNG files in the overlay directory
@@ -356,14 +339,6 @@ void init_overlays_at_boot(void)
       ext = strrchr(dirent.d_name, '.');
       if (ext && (strcasecmp(ext, ".ovl") == 0 || strcasecmp(ext, ".png") == 0))
       {
-        /*debug_log = fopen("froggba_debug.log", "a");
-        if (debug_log) {
-          fprintf(debug_log, "DEBUG: Found overlay: %s\n", dirent.d_name);
-          fflush(debug_log);
-          fclose(debug_log);
-        }*/
-        
-        // Copy filename and remove extension for display
         strncpy(overlay_names[num_overlays], dirent.d_name, sizeof(overlay_names[num_overlays]) - 1);
         overlay_names[num_overlays][sizeof(overlay_names[num_overlays]) - 1] = '\0';
         
@@ -378,15 +353,7 @@ void init_overlays_at_boot(void)
     
     sceIoDclose(dir);
   }
-  
-  /*debug_log = fopen("froggba_debug.log", "a");
-  if (debug_log) {
-    fprintf(debug_log, "DEBUG: init_overlays_at_boot complete, found %u overlays\n", num_overlays);
-    fflush(debug_log);
-    fclose(debug_log);
-  }*/
-  
-  // Mark as scanned
+
   overlays_scanned = 1;
   
   // Ensure option_overlay_selected is within bounds
@@ -412,15 +379,7 @@ void scan_overlay_files(void)
 static void overlay_changed(void)
 {
   extern int overlay_needs_update;
-  
-  /*FILE *debug_log = fopen("froggba_debug.log", "a");
-  if (debug_log) {
-    fprintf(debug_log, "overlay_changed: selected=%d, num_overlays=%d, name='%s'\n", 
-            option_overlay_selected, num_overlays, 
-            option_overlay_selected < num_overlays ? overlay_names[option_overlay_selected] : "INVALID");
-    fclose(debug_log);
-  }*/
-  
+
   if (option_overlay_selected < num_overlays) {
     extern int overlay_needs_update;
     load_overlay(overlay_names[option_overlay_selected]);
@@ -434,14 +393,7 @@ static void overlay_enabled_changed(void)
   extern int overlay_needs_update;
   extern void load_overlay(const char *filename);
   extern char overlay_names[][64];
-  
-  /*FILE *debug_log = fopen("froggba_debug.log", "a");
-  if (debug_log) {
-    fprintf(debug_log, "overlay_enabled_changed: enabled=%d, selected=%d\n", 
-            option_overlay_enabled, option_overlay_selected);
-    fclose(debug_log);
-  }*/
-  
+
   if (option_overlay_enabled && option_overlay_selected > 0) {
     // Load the selected overlay
     load_overlay(overlay_names[option_overlay_selected]);
@@ -474,27 +426,12 @@ static void overlay_offset_changed(void)
   
   // Regenerate display list with new offset - THIS IS CRITICAL
   set_gba_resolution();
-  
-  // DEBUG: Log when offset changes
-  /*FILE *debug_log = fopen("froggba_debug.log", "a");
-  if (debug_log) {
-    extern u32 option_overlay_offset_x, option_overlay_offset_y;
-    fprintf(debug_log, "overlay_offset_changed: new offset X=%d Y=%d, set overlay_needs_update=1, called set_gba_resolution\n", 
-            option_overlay_offset_x, option_overlay_offset_y);
-    fclose(debug_log);
-  }*/
 }
 
 // This function is no longer needed - arrays are initialized at compile time
 
 // Initialize overlay menu structure - to be called when we have MSG available
 static void init_overlay_menu_late(void) {
-    /*FILE *debug_log = fopen("froggba_debug.log", "a");
-    if (debug_log) {
-        fprintf(debug_log, "init_overlay_menu_late: Setting up overlay menu callbacks\n");
-        fclose(debug_log);
-    }*/
-    // Set up the overlay menu options with proper MSG references
     overlay_options_global[0].display_string = MSG[MSG_OVERLAY_MENU_0];
     overlay_options_global[0].options = (void*)overlay_name_options;
     overlay_options_global[0].current_option = &option_overlay_selected;
@@ -1308,17 +1245,6 @@ u32 menu(void)
   if (option_auto_save_state != 0) {
     save_auto_resume_state();
   }
-  
-  // Use the same debug log as HOME button
-  /*FILE *debug_log = fopen("froggba_debug.log", "a");
-  if (debug_log) {
-    fprintf(debug_log, "DEBUG: menu() function entry point\n");
-    fprintf(debug_log, "DEBUG: overlay_menu_global address: %p\n", &overlay_menu_global);
-    fprintf(debug_log, "DEBUG: overlay_options_global address: %p\n", overlay_options_global);
-    fprintf(debug_log, "DEBUG: overlay_name_options address: %p\n", overlay_name_options);
-    fflush(debug_log);
-    fclose(debug_log);
-  }*/
 
 	int id_language;
   u32 i;
@@ -2160,24 +2086,12 @@ u32 menu(void)
 
   void choose_menu(MenuType *new_menu)
   {
-    printf("DEBUG: choose_menu called with menu: %p\n", new_menu);
-    
-    if (new_menu == NULL) {
-      printf("DEBUG: new_menu was NULL, using main_menu\n");
+    if (new_menu == NULL)
       new_menu = &main_menu;
-    }
 
-    printf("DEBUG: Setting current_menu to %p\n", new_menu);
     current_menu = new_menu;
-    
-    printf("DEBUG: new_menu->options = %p\n", new_menu->options);
-    printf("DEBUG: Setting current_option to %p\n", new_menu->options);
     current_option = new_menu->options;
-    
-    printf("DEBUG: Setting current_option_num to 0\n");
     current_option_num = 0;
-    
-    printf("DEBUG: choose_menu completed successfully\n");
   }
 
   void reload_cheats_page()

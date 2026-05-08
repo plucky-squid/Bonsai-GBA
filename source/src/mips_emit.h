@@ -662,7 +662,7 @@ const u8 arm_to_mips_reg[] =
     generate_swap_delay();                                                    \
   }                                                                           \
                                                                               \
-  /* This uses variables from cpu_asm.c's translate_block_builder /           \
+  /* This uses variables from cpu.c's translate_block_builder /              \
    * translate_block_arm / translate_block_thumb functions. Basically,        \
    * if we're emitting a jump from a read-only area (BIOS or ROM) and         \
    * the branch target is in a read-only area (BIOS or ROM), we can link      \

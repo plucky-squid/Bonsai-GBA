@@ -21,7 +21,7 @@
 #include "common.h"
 #include <pspiofilemgr.h>
 
-#define GPSP_CONFIG_FILENAME  "froggba.cfg"
+#define GPSP_CONFIG_FILENAME  "bonsai.cfg"
 #define GPSP_CONFIG_NUM       (26 + 16) // options + game pad config + overlay options + aspect ratio + compatibility mode + button mapping + resume on boot + auto save state
 #define GPSP_GAME_CONFIG_NUM  (7 + 16)
 
@@ -535,7 +535,7 @@ static void init_overlay_menu_late(void) {
 // Recent games tracking functions
 void load_recent_games(void) {
   char recent_games_file[MAX_PATH];
-  sprintf(recent_games_file, "%sfroggba_recent.txt", dir_cfg);
+  sprintf(recent_games_file, "%sbonsai_recent.txt", dir_cfg);
   
   // Initialize display array
   for (int i = 0; i < MAX_RECENT_GAMES; i++) {
@@ -565,7 +565,7 @@ void load_recent_games(void) {
 
 static void save_recent_games(void) {
   char recent_games_file[MAX_PATH];
-  sprintf(recent_games_file, "%sfroggba_recent.txt", dir_cfg);
+  sprintf(recent_games_file, "%sbonsai_recent.txt", dir_cfg);
   
   FILE *file = fopen(recent_games_file, "w");
   if (file) {
@@ -964,7 +964,7 @@ s32 load_file(const char **wildcards, char *result, char *default_dir_name)
 	  print_string(MSG[MSG_BROWSER_HELP], 30, 258, COLOR_HELP_TEXT, BG_NO_FILL);
 
       // Show mod credit instead of ROM Buffer
-      print_string("FrogGBA - TempGBA mod by Prosty", 270, 258, COLOR_HELP_TEXT, BG_NO_FILL);
+      print_string("Bonsai GBA - based on FrogGBA / TempGBA", 270, 258, COLOR_HELP_TEXT, BG_NO_FILL);
 
       // PSP controller - hold
       if (get_pad_input(PSP_CTRL_HOLD) != 0)
@@ -2277,7 +2277,7 @@ u32 menu(void)
     }
 
 	print_string(MSG[current_option->help_string], 30, 258, COLOR_HELP_TEXT, BG_NO_FILL);
-    print_string("FrogGBA - TempGBA mod by Prosty", 270, 258, COLOR_HELP_TEXT, BG_NO_FILL);
+    print_string("Bonsai GBA - based on FrogGBA / TempGBA", 270, 258, COLOR_HELP_TEXT, BG_NO_FILL);
 
     // PSP controller - hold
     if (get_pad_input(PSP_CTRL_HOLD) != 0)

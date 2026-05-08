@@ -97,8 +97,7 @@ make
 
 Building the toolchain from source is a 30–60 minute affair — the Docker
 path is recommended unless you're actively hacking on the toolchain
-itself. See [BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md) for additional
-options.
+itself.
 
 ---
 

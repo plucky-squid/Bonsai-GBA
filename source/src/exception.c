@@ -1,8 +1,10 @@
 #include "common.h"
+#include <pspmoduleinfo.h>
 
 PspDebugRegBlock exception_regs;
 
-extern SceModule module_info;
+/* PSP_MODULE_INFO in main.c defines this; type must match for LTO. */
+extern const SceModuleInfo module_info;
 extern int _ftext;
 
 static const char *codeTxt[32] =

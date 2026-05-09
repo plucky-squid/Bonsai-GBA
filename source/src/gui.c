@@ -587,9 +587,6 @@ u32 ALIGN_DATA gamepad_config_line_to_button[] =
 
 u32 savestate_slot = 0;
 
-
-void _flush_cache(void);
-
 static int sort_function(const void *dest_str_ptr, const void *src_str_ptr);
 
 static s32 save_game_config_file(void);
@@ -603,13 +600,6 @@ static void get_savestate_filename(u32 slot, char *name_buffer);
 
 static void get_snapshot_filename(char *name, const char *ext);
 static void save_bmp(const char *path, u16 *screen_image);
-
-
-void _flush_cache(void)
-{
-  invalidate_all_cache();
-}
-
 
 static int sort_function(const void *dest_str_ptr, const void *src_str_ptr)
 {

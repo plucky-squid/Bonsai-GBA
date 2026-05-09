@@ -3634,6 +3634,19 @@ iac_loop:
   jr $ra                          # return
   nop
 
+# -----------------------------------------------------------------------------
+# _flush_cache — expected by GCC / libgcc on MIPS when lowering some builtins.
+# A C wrapper in gui.c was removed by LTO (no direct C callers), which then
+# produced undefined references from code such as gui menu paths where the
+# compiler still emits this symbol.  Always keep a real ELF symbol here.
+# -----------------------------------------------------------------------------
+.global _flush_cache
+.ent _flush_cache
+_flush_cache:
+  j invalidate_all_cache
+  nop
+.end _flush_cache
+
 memory_map_read:
   .space 0x8000
 
